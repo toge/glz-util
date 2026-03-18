@@ -7,7 +7,7 @@
 
 namespace glz_util {
 
-  template <typename T, std::size_t IDX = 0>
+template <typename T, std::size_t IDX = 0>
 auto print_members(T const& value) {
   if constexpr (IDX < glz::reflect<T>::size) {
     auto const  field_name  = glz::reflect<T>::keys[IDX];

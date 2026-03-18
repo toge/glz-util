@@ -49,6 +49,14 @@ struct glz::meta<AppConfig> {
 int main() {
   // 例: export NUMBER_1=42
   auto cfg = glz_util::from_env<AppConfig>();
+
+  if (!cfg) {
+    // 例: エラーメッセージを出力して終了
+    // std::cerr << cfg.error() << std::endl;
+    return 1;
+  }
+
+  auto const& value = *cfg;
 }
 ```
 
@@ -56,6 +64,67 @@ int main() {
 
 ```cpp
 auto cfg = glz_util::from_env<glz::opts{.format = glz::JSON}, AppConfig>();
+
+if (!cfg) {
+  // エラー時はstd::unexpected<std::string>
+  // cfg.error() で詳細を取得できます
+}
+```
+
+> `from_env` の戻り値は `std::expected<T, std::string>` です。
+> パース失敗時は最初のエラーで処理を停止し、`std::unexpected` を返します。
+
+### エラー文字列の形式
+
+失敗時の`error()`は、機械処理しやすいJSON文字列です。
+
+```json
+{"env":"NUMBER_1","value":"abc","detail":"Invalid argument"}
+```
+
+- `env`: 失敗した環境変数名
+- `value`: 入力文字列
+- `detail`: 失敗理由（`std::from_chars` / `glz::read` 由来）
+
+### エラー文字列のパース例
+
+```cpp
+#include <iostream>
+#include <string>
+
+#include "glz_util/env.hpp"
+
+struct EnvParseError {
+  std::string env;
+  std::string value;
+  std::string detail;
+};
+
+template <>
+struct glz::meta<EnvParseError> {
+  using T = EnvParseError;
+  static constexpr auto value = glz::object(
+    "env", &T::env,
+    "value", &T::value,
+    "detail", &T::detail
+  );
+};
+
+int main() {
+  auto cfg = glz_util::from_env<AppConfig>();
+  if (!cfg) {
+    EnvParseError parsed{};
+    if (auto ec = glz::read_json(parsed, cfg.error()); ec) {
+      std::cerr << "failed to parse error payload: " << cfg.error() << '\n';
+      return 1;
+    }
+
+    std::cerr << "env=" << parsed.env
+              << " value=" << parsed.value
+              << " detail=" << parsed.detail << '\n';
+    return 1;
+  }
+}
 ```
 
 ## CMake での利用
@@ -74,5 +143,5 @@ target_link_libraries(your_target PRIVATE glz_util::glz_util)
 
 ## ライセンス
 
-MIT License です。
+MIT Licenseです。
 詳細は `LICENSE` を参照してください。
