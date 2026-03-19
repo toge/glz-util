@@ -11,6 +11,8 @@
     - `glz::opts`を指定した読み込み（例: JSON形式）に対応します。
 - `glz_util::print_members(value)`
     - 構造体メンバー名と値を列挙して表示できます。
+- `glz_util_json_schema_codegen`
+    - JSON Schema から `struct` と `glz::meta` 定義を自動生成できます。
 
 ## 必要環境
 
@@ -126,6 +128,66 @@ int main() {
   }
 }
 ```
+
+### JSON Schema から struct を生成
+
+`glz_util_json_schema_codegen` は、JSON Schema ファイルを読み込んで、Glaze でそのまま JSON を読める C++ ヘッダ断片を生成します。
+
+```bash
+glz_util_json_schema_codegen schema.json --root AppConfig --output app_config.hpp
+```
+
+標準出力へ出したい場合は `--output` を省略できます。
+
+生成されるコードはおおむね次の形です。
+
+```cpp
+struct AppConfig {
+  std::string name{};
+  std::optional<std::int64_t> retry_count{};
+};
+
+template <>
+struct glz::meta<AppConfig> {
+  using T = AppConfig;
+  static constexpr auto value = glz::object(
+    "name", &T::name,
+    "retry_count", &T::retry_count
+  );
+};
+```
+
+その後は通常どおり `glz::read_json` / `glz::read_file_json` で読み込めます。
+
+```cpp
+#include "app_config.hpp"
+
+int main() {
+  AppConfig config{};
+  std::string buffer;
+  if (auto ec = glz::read_file_json(config, "config.json", buffer); ec) {
+    return 1;
+  }
+}
+```
+
+初期実装で対応している主な JSON Schema 要素:
+
+- `type`
+- `properties`
+- `required`
+- `items`
+- `$ref`（ローカル参照のみ）
+- `$defs` / `definitions` 経由の参照先オブジェクト
+- `enum`（型推論用途）
+
+未対応または明示的にエラーにする要素:
+
+- `oneOf`
+- `anyOf`
+- `allOf`
+- スキーマ値を持つ `additionalProperties`
+- 再帰参照
 
 ## CMake での利用
 

@@ -56,16 +56,17 @@ target_include_directories(glz_util
 target_link_libraries(glz_util INTERFACE glaze::glaze)
 target_compile_features(glz_util INTERFACE ${STD_CPP})
 
+
 set(GLZ_UTIL_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/glz_util")
 
-install(TARGETS glz_util EXPORT zxcppTargets)
+install(TARGETS glz_util EXPORT glz_utilTargets)
 install(FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/include/glz_util/env.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/glz_util/print.hpp"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/glz_util)
 
-install(EXPORT zxcppTargets
-        FILE zxcppTargets.cmake
+install(EXPORT glz_utilTargets
+        FILE glz_utilTargets.cmake
         NAMESPACE glz_util::
         DESTINATION ${GLZ_UTIL_INSTALL_CMAKEDIR})
 
@@ -85,6 +86,16 @@ install(FILES
             "${CMAKE_CURRENT_BINARY_DIR}/glz_utilConfig.cmake"
             "${CMAKE_CURRENT_BINARY_DIR}/glz_utilConfigVersion.cmake"
         DESTINATION ${GLZ_UTIL_INSTALL_CMAKEDIR})
+
+
+add_executable(json_schema_codegen
+    util/json_schema_codegen.cpp
+    util/json_schema_codegen.hpp
+)
+
+target_link_libraries(json_schema_codegen PRIVATE glz_util::glz_util)
+target_compile_features(json_schema_codegen PRIVATE ${STD_CPP})
+install(TARGETS json_schema_codegen RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 enable_testing()
 add_subdirectory(test)
