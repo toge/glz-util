@@ -30,7 +30,7 @@
 
 ```cpp
 #include <string>
-#include "glz_util/env.hpp"
+#include "glz-util/env.hpp"
 
 struct AppConfig {
   int         number1 = 0;
@@ -94,7 +94,7 @@ if (!cfg) {
 #include <iostream>
 #include <string>
 
-#include "glz_util/env.hpp"
+#include "glz-util/env.hpp"
 
 struct EnvParseError {
   std::string env;
@@ -131,10 +131,10 @@ int main() {
 
 ### JSON Schema から struct を生成
 
-`glz_util_json_schema_codegen` は、JSON Schema ファイルを読み込んで、Glaze でそのまま JSON を読める C++ ヘッダ断片を生成します。
+`json_schema_codegen` は、JSON Schema ファイルを読み込んで、Glaze でそのまま JSON を読める C++ ヘッダ断片を生成します。
 
 ```bash
-glz_util_json_schema_codegen schema.json --root AppConfig --output app_config.hpp
+json_schema_codegen schema.json --root AppConfig --output app_config.hpp
 ```
 
 標準出力へ出したい場合は `--output` を省略できます。
@@ -191,11 +191,11 @@ int main() {
 
 ## CMake での利用
 
-このプロジェクトは `glz_util::glz_util` ターゲットを提供します。
+このプロジェクトは `glz-util::glz-util` ターゲットを提供します。
 
 ```cmake
-find_package(glz_util CONFIG REQUIRED)
-target_link_libraries(your_target PRIVATE glz_util::glz_util)
+find_package(glz-util CONFIG REQUIRED)
+target_link_libraries(your_target PRIVATE glz-util::glz-util)
 ```
 
 ## テスト
