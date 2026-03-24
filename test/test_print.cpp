@@ -3,7 +3,7 @@
 #include <string>
 #include <utility>
 
-#include "glz_util/print.hpp"
+#include "glz-util/print.hpp"
 
 #include "catch2/catch_all.hpp"
 

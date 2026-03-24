@@ -1,6 +1,6 @@
 #include <string>
 
-#include "glz_util/env.hpp"
+#include "glz-util/env.hpp"
 
 #include "catch2/catch_all.hpp"
 
