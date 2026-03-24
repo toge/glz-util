@@ -45,29 +45,29 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(glaze CONFIG REQUIRED)
 
-add_library(glz_util INTERFACE)
-add_library(glz_util::glz_util ALIAS glz_util)
+add_library(glz-util INTERFACE)
+add_library(glz-util::glz-util ALIAS glz-util)
 
-target_include_directories(glz_util
+target_include_directories(glz-util
     INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(glz_util INTERFACE glaze::glaze)
-target_compile_features(glz_util INTERFACE ${STD_CPP})
+target_link_libraries(glz-util INTERFACE glaze::glaze)
+target_compile_features(glz-util INTERFACE ${STD_CPP})
 
 
-set(GLZ_UTIL_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/glz_util")
+set(GLZ_UTIL_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/glz-util")
 
-install(TARGETS glz_util EXPORT glz_utilTargets)
+install(TARGETS glz-util EXPORT glz_utilTargets)
 install(FILES
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/glz_util/env.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/glz_util/print.hpp"
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/glz_util)
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/env.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/print.hpp"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/glz-util)
 
 install(EXPORT glz_utilTargets
         FILE glz_utilTargets.cmake
-        NAMESPACE glz_util::
+        NAMESPACE glz-util::
         DESTINATION ${GLZ_UTIL_INSTALL_CMAKEDIR})
 
 configure_package_config_file(
@@ -93,7 +93,7 @@ add_executable(json_schema_codegen
     util/json_schema_codegen.hpp
 )
 
-target_link_libraries(json_schema_codegen PRIVATE glz_util::glz_util)
+target_link_libraries(json_schema_codegen PRIVATE glz-util::glz-util)
 target_compile_features(json_schema_codegen PRIVATE ${STD_CPP})
 install(TARGETS json_schema_codegen RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
