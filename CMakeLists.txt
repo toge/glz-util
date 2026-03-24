@@ -59,32 +59,32 @@ target_compile_features(glz-util INTERFACE ${STD_CPP})
 
 set(GLZ_UTIL_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/glz-util")
 
-install(TARGETS glz-util EXPORT glz_utilTargets)
+install(TARGETS glz-util EXPORT glz-utilTargets)
 install(FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/env.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/print.hpp"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/glz-util)
 
-install(EXPORT glz_utilTargets
-        FILE glz_utilTargets.cmake
+install(EXPORT glz-utilTargets
+        FILE glz-utilTargets.cmake
         NAMESPACE glz-util::
         DESTINATION ${GLZ_UTIL_INSTALL_CMAKEDIR})
 
 configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/glz_utilConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/glz_utilConfig.cmake"
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/glz-utilConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/glz-utilConfig.cmake"
     INSTALL_DESTINATION ${GLZ_UTIL_INSTALL_CMAKEDIR}
 )
 
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/glz_utilConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/glz-utilConfigVersion.cmake"
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 
 install(FILES
-            "${CMAKE_CURRENT_BINARY_DIR}/glz_utilConfig.cmake"
-            "${CMAKE_CURRENT_BINARY_DIR}/glz_utilConfigVersion.cmake"
+            "${CMAKE_CURRENT_BINARY_DIR}/glz-utilConfig.cmake"
+            "${CMAKE_CURRENT_BINARY_DIR}/glz-utilConfigVersion.cmake"
         DESTINATION ${GLZ_UTIL_INSTALL_CMAKEDIR})
 
 
