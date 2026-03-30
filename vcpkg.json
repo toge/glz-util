@@ -1,6 +1,7 @@
 {
   "dependencies": [
     "catch2",
-    "glaze"
+    "glaze",
+    "tsl-hat-trie"
   ]
 }
