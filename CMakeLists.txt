@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.25)
 project(glz-util VERSION 0.0.1 LANGUAGES CXX)
 
+option(ENABLE_TESTS "Enable tests" ON)
+
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
@@ -56,7 +58,6 @@ target_include_directories(glz-util
 target_link_libraries(glz-util INTERFACE glaze::glaze)
 target_compile_features(glz-util INTERFACE ${STD_CPP})
 
-
 set(GLZ_UTIL_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/glz-util")
 
 install(TARGETS glz-util EXPORT glz-utilTargets)
@@ -99,5 +100,7 @@ target_link_libraries(json_schema_codegen PRIVATE glz-util::glz-util)
 target_compile_features(json_schema_codegen PRIVATE ${STD_CPP})
 install(TARGETS json_schema_codegen RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-enable_testing()
-add_subdirectory(test)
+if(ENABLE_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif()
