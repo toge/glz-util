@@ -20,13 +20,15 @@ TEST_CASE("glaze wrapper for tss::httrie_map") {
     target["6"] = "F";
     target["7"] = "G";
     target["8"] = "H";
-    glz::write_json(target, buffer);
+    auto const ec = glz::write_json(target, buffer);
+    REQUIRE(!ec);
   }
 
   REQUIRE(buffer == "[\"E\",\"G\",\"A\",\"H\",\"D\",\"B\",\"C\",\"F\"]");
 
   {
-    htrie_map_wrapper<char, std::string> test();
+    auto test = htrie_map_wrapper<char, std::string>{};
+    REQUIRE(test.raw().empty());
   }
 
   {
@@ -34,12 +36,36 @@ TEST_CASE("glaze wrapper for tss::httrie_map") {
 
     auto buffer = R"({"123":"hello","987":"world"})";
 
-    glz::read_json(target, buffer);
+    auto const ec = glz::read_json(target, buffer);
+    REQUIRE(!ec);
 
     auto const& target2 = target.raw();
 
     REQUIRE(target2.at("123") == "hello");
     REQUIRE(target2.at("987") == "world");
+  }
+#endif
+}
+
+TEST_CASE("glaze wrapper for tsl::htrie_set") {
+#if __has_include("tsl/htrie_set.h")
+  {
+    auto target = htrie_set_wrapper<char>{};
+    REQUIRE(target.raw().empty());
+  }
+
+  {
+    auto target = htrie_set_wrapper<char>{};
+    auto buffer = R"(["123","987"])";
+
+    auto const ec = glz::read_json(target, buffer);
+
+    REQUIRE(!ec);
+
+    auto const& raw = target.raw();
+
+    REQUIRE(raw.count("123") == 1);
+    REQUIRE(raw.count("987") == 1);
   }
 #endif
 }
