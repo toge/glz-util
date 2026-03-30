@@ -13,6 +13,7 @@
     - 構造体メンバー名と値を列挙して表示できます。
 - `glz_util_json_schema_codegen`
     - JSON Schema から `struct` と `glz::meta` 定義を自動生成できます。
+- [HAT-trie](https://github.com/Tessil/hat-trie)とglazeとの相互運用のためのwrapperを提供しています。
 
 ## 必要環境
 
@@ -126,6 +127,27 @@ int main() {
               << " detail=" << parsed.detail << '\n';
     return 1;
   }
+}
+```
+
+### HAT-trieとglazeの相互運用
+
+```cpp
+#include <iostream>
+
+#include "tsl/htrie_map.h"
+#include "glz-util/tsl-hat-trie.hpp"
+
+int main() {
+  auto buffer = R"({"123":"hello","987":"world"})";
+  auto target = htrie_map_wrapper<char, std::string>{};
+
+  glz::read_json(target, buffer);
+
+  auto const& target2 = target.raw();
+
+  std::cout << target2.at("123") << '\n'; // => "hello"
+  std::cout << target2.at("987") << '\n'; // => "world"
 }
 ```
 
