@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(glz-util VERSION 0.0.1 LANGUAGES C CXX)
+project(glz-util VERSION 0.0.1 LANGUAGES CXX)
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
@@ -44,7 +44,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(glaze CONFIG REQUIRED)
-find_package(zfp CONFIG REQUIRED)
 
 add_library(glz-util INTERFACE)
 add_library(glz-util::glz-util ALIAS glz-util)
@@ -54,7 +53,7 @@ target_include_directories(glz-util
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(glz-util INTERFACE glaze::glaze zfp::zfp)
+target_link_libraries(glz-util INTERFACE glaze::glaze)
 target_compile_features(glz-util INTERFACE ${STD_CPP})
 
 

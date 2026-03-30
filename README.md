@@ -22,10 +22,10 @@
 - C++23以上（利用可能ならC++26を優先）
 - 依存ライブラリ
     - `glaze`
-    - `zfp`
     - `catch2`（テスト時）
 
-このリポジトリには `vcpkg.json` が含まれており、依存関係として `glaze` / `zfp` / `catch2` を宣言しています。
+このリポジトリには `vcpkg.json` が含まれており、依存関係として `glaze` / `zfp` / `tsl-hat-trie` / `catch2` を宣言しています。
+ただし `glz-util` 本体の公開CMake依存は `glaze` のみで、`zfp` / `tsl-hat-trie` はテストや対応wrapper利用側で個別に解決する前提です。
 
 ## 使い方
 
@@ -153,6 +153,8 @@ int main() {
 }
 ```
 
+`tsl-hat-trie.hpp` を利用する場合は、利用側で `tsl-hat-trie` のヘッダ検索パスを設定してください。
+
 ### ZFPとglazeの相互運用
 
 ```cpp
@@ -184,6 +186,7 @@ int main() {
 
 `zfp_array1_wrapper` 〜 `zfp_array4_wrapper` は、Glaze との境界では通常のJSON配列として振る舞います。
 例えば `zfp_array3_wrapper<double>` は `[[[1.0,2.0],[3.0,4.0]]]` のようなネスト配列を読み書きできます。
+`zfp.hpp` を利用する場合は、利用側で `find_package(zfp CONFIG REQUIRED)` し、`zfp::zfp` をリンクしてください。
 
 ### JSON Schema から struct を生成
 
@@ -248,11 +251,24 @@ int main() {
 ## CMake での利用
 
 このプロジェクトは `glz-util::glz-util` ターゲットを提供します。
-ZFP wrapper を利用する場合は、依存先の `zfp` が `OpenMP::OpenMP_C` を公開するため、利用側プロジェクトも `project(... LANGUAGES C CXX)` のように C 言語を有効化してください。
 
 ```cmake
 find_package(glz-util CONFIG REQUIRED)
 target_link_libraries(your_target PRIVATE glz-util::glz-util)
+```
+
+ZFP wrapper も利用する場合の例:
+
+```cmake
+project(your_project LANGUAGES C CXX)
+
+find_package(glz-util CONFIG REQUIRED)
+find_package(zfp CONFIG REQUIRED)
+
+target_link_libraries(your_target PRIVATE
+  glz-util::glz-util
+  zfp::zfp
+)
 ```
 
 ## テスト
