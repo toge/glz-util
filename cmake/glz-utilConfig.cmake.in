@@ -2,6 +2,7 @@
 
 include(CMakeFindDependencyMacro)
 find_dependency(glaze CONFIG REQUIRED)
+find_dependency(zfp CONFIG REQUIRED)
 
 include("${CMAKE_CURRENT_LIST_DIR}/glz-utilTargets.cmake")
 check_required_components(glz-util)
