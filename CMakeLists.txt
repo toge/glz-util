@@ -64,6 +64,7 @@ install(TARGETS glz-util EXPORT glz-utilTargets)
 install(FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/env.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/print.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/st_tree.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/tsl-hat-trie.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/zfp.hpp"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/glz-util)

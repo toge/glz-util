@@ -13,6 +13,7 @@
     - 構造体メンバー名と値を列挙して表示できます。
 - `glz_util_json_schema_codegen`
     - JSON Schema から `struct` と `glz::meta` 定義を自動生成できます。
+- [st_tree](https://github.com/erikerlandson/st_tree)とglazeとの相互運用のためのwrapperを提供しています。
 - [HAT-trie](https://github.com/Tessil/hat-trie)とglazeとの相互運用のためのwrapperを提供しています。
 - [ZFP](https://github.com/LLNL/ZFP)とglazeとの相互運用のためのwrapperを提供しています。
 
@@ -24,7 +25,7 @@
     - `glaze`
     - `catch2`（テスト時）
 
-このリポジトリには `vcpkg.json` が含まれており、依存関係として `glaze` / `zfp` / `tsl-hat-trie` / `catch2` を宣言しています。
+このリポジトリには `vcpkg.json` が含まれており、依存関係として `glaze` / `st-tree` / `zfp` / `tsl-hat-trie` / `catch2` を宣言しています。
 ただし `glz-util` 本体の公開CMake依存は `glaze` のみで、`zfp` / `tsl-hat-trie` はテストや対応wrapper利用側で個別に解決する前提です。
 
 ## 使い方
@@ -154,6 +155,40 @@ int main() {
 ```
 
 `tsl-hat-trie.hpp` を利用する場合は、利用側で `tsl-hat-trie` のヘッダ検索パスを設定してください。
+
+### st_treeとglazeの相互運用
+
+```cpp
+#include <iostream>
+#include <string>
+
+#include "st_tree.h"
+#include "glz-util/st_tree.hpp"
+
+int main() {
+  auto buffer = R"(["root",[["left",[]],["right",[["leaf",[]]]]]])";
+  auto target = st_tree_wrapper<std::string>{};
+
+  if (auto ec = glz::read_json(target, buffer); ec) {
+    return 1;
+  }
+
+  auto const& raw = target.raw();
+  std::cout << raw.root().data() << '\n';
+  std::cout << raw.root()[1][0].data() << '\n';
+
+  auto json = std::string{};
+  if (auto ec = glz::write_json(target, json); ec) {
+    return 1;
+  }
+
+  std::cout << json << '\n';
+}
+```
+
+`st_tree_wrapper<T>` は `st_tree::tree<T>` を、`st_tree_wrapper<T, st_tree::ordered<>>` は ordered child storage を Glaze と相互変換できます。
+Glazeとの境界では、空木は `[]`、ノードは `[value, children]` のJSON配列として表現されます。
+`st_tree.hpp` を利用する場合は、利用側で `st_tree.h` のヘッダ検索パスを設定してください。
 
 ### ZFPとglazeの相互運用
 
