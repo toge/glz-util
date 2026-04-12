@@ -62,6 +62,7 @@ set(GLZ_UTIL_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/glz-util")
 
 install(TARGETS glz-util EXPORT glz-utilTargets)
 install(FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/args.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/env.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/print.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/glz-util/st_tree.hpp"

@@ -9,6 +9,10 @@
     - `glz::meta<T>`で定義したキー名を環境変数名として解釈し、構造体`T`に値を読み込みます。
 - `glz_util::from_env<Opts, T>()`
     - `glz::opts`を指定した読み込み（例: JSON形式）に対応します。
+- `glz_util::from_args<T>()`
+    - `glz::meta<T>`で定義したキー名を `argc/argv` から case-insensitive に読み込みます。
+- `glz_util::from_args<Opts, T>()`
+    - `glz::opts` を指定した `argc/argv` 読み込み（例: JSON形式）に対応します。
 - `glz_util::print_members(value)`
     - 構造体メンバー名と値を列挙して表示できます。
 - `glz_util_json_schema_codegen`
@@ -66,6 +70,44 @@ int main() {
 }
 ```
 
+### コマンドライン引数から構造体を生成
+
+```cpp
+#include <string>
+#include "glz-util/args.hpp"
+
+struct AppConfig {
+  int         port = 0;
+  float       ratio = 0.0f;
+  std::string message;
+  bool        enabled = false;
+};
+
+template <>
+struct glz::meta<AppConfig> {
+  using T = AppConfig;
+  static constexpr auto value = glz::object(
+    "port", &T::port,
+    "ratio", &T::ratio,
+    "message", &T::message,
+    "enabled", &T::enabled
+  );
+};
+
+int main(int argc, char** argv) {
+  auto cfg = glz_util::from_args<AppConfig>(argc, argv);
+
+  if (!cfg) {
+    return 1;
+  }
+
+  auto const& value = *cfg;
+}
+```
+
+`from_args` は `--port=42` / `--port 42` / `-port=42` / `-port 42` を受け付けます。
+キー名マッチは case-insensitive で、未定義キーは無視されます。
+
 ### オプション付き読み込み（例: JSON）
 
 ```cpp
@@ -79,6 +121,7 @@ if (!cfg) {
 
 > `from_env` の戻り値は `std::expected<T, std::string>` です。
 > パース失敗時は最初のエラーで処理を停止し、`std::unexpected` を返します。
+> `from_args` も同様に `std::expected<T, std::string>` を返します。
 
 ### エラー文字列の形式
 
@@ -91,6 +134,12 @@ if (!cfg) {
 - `env`: 失敗した環境変数名
 - `value`: 入力文字列
 - `detail`: 失敗理由（`std::from_chars` / `glz::read` 由来）
+
+`from_args` の場合は `env` の代わりに `key` が入ります。
+
+```json
+{"key":"port","value":"abc","detail":"Invalid argument"}
+```
 
 ### エラー文字列のパース例
 
