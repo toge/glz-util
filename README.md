@@ -15,6 +15,8 @@
     - `glz::opts` を指定した `argc/argv` 読み込み（例: JSON形式）に対応します。
 - `glz_util::print_members(value)`
     - 構造体メンバー名と値を列挙して表示できます。
+- `glz_util::diff_members(before, after)`
+    - 同型の2構造体を比較し、変更されたフィールドを `FieldDiff` の配列として返します。
 - `glz_util_json_schema_codegen`
     - JSON Schema から `struct` と `glz::meta` 定義を自動生成できます。
 - [st_tree](https://github.com/erikerlandson/st_tree)とglazeとの相互運用のためのwrapperを提供しています。
@@ -122,6 +124,36 @@ if (!cfg) {
 > `from_env` の戻り値は `std::expected<T, std::string>` です。
 > パース失敗時は最初のエラーで処理を停止し、`std::unexpected` を返します。
 > `from_args` も同様に `std::expected<T, std::string>` を返します。
+
+### 構造体メンバーの差分を取得
+
+```cpp
+#include <string>
+
+#include "glz-util/diff.hpp"
+
+struct Config {
+  int         timeout = 30;
+  std::string host = "localhost";
+};
+
+int main() {
+  auto const before = Config{};
+  auto const after = Config{.timeout = 60, .host = "example.com"};
+
+  auto const diffs = glz_util::diff_members(before, after);
+  // diffs[0] = { "timeout", "30", "60" }
+  // diffs[1] = { "host", "\"localhost\"", "\"example.com\"" }
+
+  auto json = std::string{};
+  if (auto const ec = glz::write_json(diffs, json); ec) {
+    return 1;
+  }
+}
+```
+
+`FieldDiff::before` と `FieldDiff::after` には、各フィールドを `glz::write_json` した JSON 文字列が入ります。
+そのため文字列型は `"\"value\""` のように JSON 文字列リテラルとして保持されます。
 
 ### エラー文字列の形式
 
