@@ -15,6 +15,30 @@
 
 namespace glz_util {
 
+/**
+ * @brief Discriminates command-line parsing failures from help-mode requests.
+ */
+enum class ArgsErrorKind {
+  parse_error,
+  help_requested,
+};
+
+/**
+ * @brief Represents either a parse error or a help-mode request from from_args().
+ */
+struct ArgsError {
+  ArgsErrorKind kind = ArgsErrorKind::parse_error;
+  std::string   message{};
+
+  /**
+   * @brief Returns true when the caller should switch to help-mode handling.
+   * @return True if help was requested with --help or -h, otherwise false.
+   */
+  [[nodiscard]] auto is_help_requested() const -> bool {
+    return kind == ArgsErrorKind::help_requested;
+  }
+};
+
 namespace args_internal {
 
 inline auto append_json_escaped(std::string& out, std::string_view input) -> void {
@@ -56,14 +80,48 @@ inline auto make_parse_error_message(std::string_view field_name, std::string_vi
   return message;
 }
 
+inline auto make_parse_error(std::string_view field_name, std::string_view value, std::string_view detail)
+  -> ArgsError {
+  return ArgsError{
+    .kind = ArgsErrorKind::parse_error,
+    .message = make_parse_error_message(field_name, value, detail),
+  };
+}
+
 inline auto make_from_chars_error_message(std::string_view field_name, std::string_view value, std::errc ec)
-  -> std::string {
-  return make_parse_error_message(field_name, value, std::make_error_code(ec).message());
+  -> ArgsError {
+  return make_parse_error(field_name, value, std::make_error_code(ec).message());
 }
 
 inline auto make_from_chars_trailing_characters_message(std::string_view field_name, std::string_view value)
-  -> std::string {
-  return make_parse_error_message(field_name, value, "input contains trailing characters");
+  -> ArgsError {
+  return make_parse_error(field_name, value, "input contains trailing characters");
+}
+
+inline auto make_help_requested_error() -> ArgsError {
+  return ArgsError{
+    .kind = ArgsErrorKind::help_requested,
+    .message = "help requested",
+  };
+}
+
+inline auto has_help_flag(int argc, char const* const* argv) -> bool {
+  if (argc <= 1 || argv == nullptr) {
+    return false;
+  }
+
+  for (auto i = 1; i < argc; ++i) {
+    if (argv[i] == nullptr) {
+      continue;
+    }
+
+    auto const current = std::string_view{argv[i]};
+    if (current == "--help" || current == "-h") {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 inline auto ascii_lower(char c) -> char {
@@ -195,7 +253,7 @@ concept from_chars_readable = requires(char const* first, char const* last, T& v
 
 template <typename Value>
 auto parse_plain_value(std::string_view field_name, std::string_view raw, Value& value)
-  -> std::expected<void, std::string> {
+  -> std::expected<void, ArgsError> {
   if constexpr (std::is_convertible_v<decltype(value), std::string>) {
     value = raw;
     return {};
@@ -212,7 +270,7 @@ auto parse_plain_value(std::string_view field_name, std::string_view raw, Value&
     return {};
   } else {
     if (auto const ec = glz::read<glz::opts{}>(value, raw); ec) {
-      return std::unexpected(make_parse_error_message(field_name, raw, glz::format_error(ec, raw)));
+      return std::unexpected(make_parse_error(field_name, raw, glz::format_error(ec, raw)));
     }
     return {};
   }
@@ -220,18 +278,18 @@ auto parse_plain_value(std::string_view field_name, std::string_view raw, Value&
 
 template <glz::opts Opts, typename Value>
 auto parse_opts_value(std::string_view field_name, std::string_view raw, Value& value)
-  -> std::expected<void, std::string> {
+  -> std::expected<void, ArgsError> {
   if constexpr (std::is_convertible_v<decltype(value), std::string>) {
     if (raw.size() >= 2 && raw.front() == '"' && raw.back() == '"') {
       if (auto const ec = glz::read<Opts>(value, raw); ec) {
-        return std::unexpected(make_parse_error_message(field_name, raw, glz::format_error(ec, raw)));
+        return std::unexpected(make_parse_error(field_name, raw, glz::format_error(ec, raw)));
       }
     } else {
       value = raw;
     }
   } else {
     if (auto const ec = glz::read<Opts>(value, raw); ec) {
-      return std::unexpected(make_parse_error_message(field_name, raw, glz::format_error(ec, raw)));
+      return std::unexpected(make_parse_error(field_name, raw, glz::format_error(ec, raw)));
     }
   }
 
@@ -240,7 +298,7 @@ auto parse_opts_value(std::string_view field_name, std::string_view raw, Value& 
 
 template <typename T, std::size_t IDX>
 auto apply_values(T& result, std::array<std::optional<std::string_view>, glz::reflect<T>::size> const& values)
-  -> std::expected<void, std::string> {
+  -> std::expected<void, ArgsError> {
   if constexpr (IDX < glz::reflect<T>::size) {
     if (values[IDX]) {
       auto const field_name = glz::reflect<T>::keys[IDX];
@@ -259,7 +317,7 @@ auto apply_values(T& result, std::array<std::optional<std::string_view>, glz::re
 
 template <glz::opts Opts, typename T, std::size_t IDX>
 auto apply_values(T& result, std::array<std::optional<std::string_view>, glz::reflect<T>::size> const& values)
-  -> std::expected<void, std::string> {
+  -> std::expected<void, ArgsError> {
   if constexpr (IDX < glz::reflect<T>::size) {
     if (values[IDX]) {
       auto const field_name = glz::reflect<T>::keys[IDX];
@@ -282,10 +340,14 @@ auto apply_values(T& result, std::array<std::optional<std::string_view>, glz::re
  * @brief Parse a reflected Glaze object from argc/argv.
  * @param argc Argument count received by main.
  * @param argv Argument vector received by main.
- * @return Parsed object on success, or a JSON error payload string on the first parse failure.
+ * @return Parsed object on success, or an ArgsError describing help mode or the first parse failure.
  */
 template <typename T>
-auto from_args(int argc, char const* const* argv) -> std::expected<T, std::string> {
+auto from_args(int argc, char const* const* argv) -> std::expected<T, ArgsError> {
+  if (args_internal::has_help_flag(argc, argv)) {
+    return std::unexpected(args_internal::make_help_requested_error());
+  }
+
   auto result = T{};
   auto const values = args_internal::collect_values<T>(argc, argv);
   if (auto status = args_internal::apply_values<T, 0>(result, values); !status) {
@@ -298,10 +360,14 @@ auto from_args(int argc, char const* const* argv) -> std::expected<T, std::strin
  * @brief Parse a reflected Glaze object from argc/argv using explicit Glaze options.
  * @param argc Argument count received by main.
  * @param argv Argument vector received by main.
- * @return Parsed object on success, or a JSON error payload string on the first parse failure.
+ * @return Parsed object on success, or an ArgsError describing help mode or the first parse failure.
  */
 template <glz::opts Opts, typename T>
-auto from_args(int argc, char const* const* argv) -> std::expected<T, std::string> {
+auto from_args(int argc, char const* const* argv) -> std::expected<T, ArgsError> {
+  if (args_internal::has_help_flag(argc, argv)) {
+    return std::unexpected(args_internal::make_help_requested_error());
+  }
+
   auto result = T{};
   auto const values = args_internal::collect_values<T>(argc, argv);
   if (auto status = args_internal::apply_values<Opts, T, 0>(result, values); !status) {

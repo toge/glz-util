@@ -100,6 +100,10 @@ int main(int argc, char** argv) {
   auto cfg = glz_util::from_args<AppConfig>(argc, argv);
 
   if (!cfg) {
+    if (cfg.error().is_help_requested()) {
+      return 0;
+    }
+
     return 1;
   }
 
@@ -109,6 +113,7 @@ int main(int argc, char** argv) {
 
 `from_args` は `--port=42` / `--port 42` / `-port=42` / `-port 42` を受け付けます。
 キー名マッチは case-insensitive で、未定義キーは無視されます。
+`--help` または `-h` が含まれている場合は構造体生成を中止し、`ArgsErrorKind::help_requested` を返します。
 
 ### オプション付き読み込み（例: JSON）
 
@@ -123,7 +128,9 @@ if (!cfg) {
 
 > `from_env` の戻り値は `std::expected<T, std::string>` です。
 > パース失敗時は最初のエラーで処理を停止し、`std::unexpected` を返します。
-> `from_args` も同様に `std::expected<T, std::string>` を返します。
+> `from_args` の戻り値は `std::expected<T, glz_util::ArgsError>` です。
+> `cfg.error().kind == glz_util::ArgsErrorKind::help_requested` なら help モード要求です。
+> `cfg.error().kind == glz_util::ArgsErrorKind::parse_error` のとき、`cfg.error().message` に従来どおり JSON 形式のエラー文字列が入ります。
 
 ### 構造体メンバーの差分を取得
 
@@ -167,7 +174,7 @@ int main() {
 - `value`: 入力文字列
 - `detail`: 失敗理由（`std::from_chars` / `glz::read` 由来）
 
-`from_args` の場合は `env` の代わりに `key` が入ります。
+`from_args` の parse error の場合は `env` の代わりに `key` が入り、その JSON 文字列は `ArgsError::message` に格納されます。
 
 ```json
 {"key":"port","value":"abc","detail":"Invalid argument"}

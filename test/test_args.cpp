@@ -126,7 +126,7 @@ TEST_CASE("glaze args ignores unknown keys and keeps last value") {
   REQUIRE(result->enabled);
 }
 
-TEST_CASE("glaze args returns json error payload on invalid value") {
+TEST_CASE("glaze args returns parse_error payload on invalid value") {
   auto constexpr argv = std::array{
     "app",
     "--port=abc"
@@ -135,9 +135,10 @@ TEST_CASE("glaze args returns json error payload on invalid value") {
   auto const result = glz_util::from_args<args_test_struct>(static_cast<int>(argv.size()), argv.data());
 
   REQUIRE_FALSE(result.has_value());
+  REQUIRE(result.error().kind == glz_util::ArgsErrorKind::parse_error);
 
   args_error_payload payload{};
-  auto const ec = glz::read_json(payload, result.error());
+  auto const ec = glz::read_json(payload, result.error().message);
 
   REQUIRE_FALSE(ec);
   REQUIRE(payload.key == "port");
@@ -159,6 +160,63 @@ TEST_CASE("glaze args json opts reads json literals") {
   REQUIRE(result.has_value());
   REQUIRE(result->numbers == std::vector<int>{1, 2, 3});
   REQUIRE(result->message == "hello json");
+}
+
+TEST_CASE("glaze args reports help_requested for long help flag") {
+  auto constexpr argv = std::array{
+    "app",
+    "--help"
+  };
+
+  auto const result = glz_util::from_args<args_test_struct>(static_cast<int>(argv.size()), argv.data());
+
+  REQUIRE_FALSE(result.has_value());
+  REQUIRE(result.error().kind == glz_util::ArgsErrorKind::help_requested);
+  REQUIRE(result.error().message == "help requested");
+  REQUIRE(result.error().is_help_requested());
+}
+
+TEST_CASE("glaze args reports help_requested for short help flag") {
+  auto constexpr argv = std::array{
+    "app",
+    "-h"
+  };
+
+  auto const result = glz_util::from_args<args_test_struct>(static_cast<int>(argv.size()), argv.data());
+
+  REQUIRE_FALSE(result.has_value());
+  REQUIRE(result.error().kind == glz_util::ArgsErrorKind::help_requested);
+  REQUIRE(result.error().message == "help requested");
+}
+
+TEST_CASE("glaze args help short-circuits parse errors") {
+  auto constexpr argv = std::array{
+    "app",
+    "--port=abc",
+    "--help"
+  };
+
+  auto const result = glz_util::from_args<args_test_struct>(static_cast<int>(argv.size()), argv.data());
+
+  REQUIRE_FALSE(result.has_value());
+  REQUIRE(result.error().kind == glz_util::ArgsErrorKind::help_requested);
+  REQUIRE(result.error().message == "help requested");
+}
+
+TEST_CASE("glaze args json opts reports help_requested") {
+  auto constexpr argv = std::array{
+    "app",
+    "-h",
+    "--numbers=[1,2,3]"
+  };
+
+  auto const result = glz_util::from_args<glz::opts{.format = glz::JSON}, args_json_struct>(
+    static_cast<int>(argv.size()), argv.data()
+  );
+
+  REQUIRE_FALSE(result.has_value());
+  REQUIRE(result.error().kind == glz_util::ArgsErrorKind::help_requested);
+  REQUIRE(result.error().message == "help requested");
 }
 
 #endif
