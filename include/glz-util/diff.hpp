@@ -60,6 +60,8 @@ consteval auto all_fields_json_writable() -> bool {
 template <typename Field>
 auto write_field_json(std::string_view key, Field const& field) -> std::string {
   auto json = glz::write_json(field);
+  // all_fields_json_writable<T>() の consteval 制約により、このパスは到達不能。
+  // 防御的セーフティネットとして保持。
   if (!json) {
     throw std::runtime_error("glz_util::diff_members failed to serialize field: " + std::string{key});
   }

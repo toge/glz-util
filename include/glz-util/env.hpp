@@ -11,35 +11,11 @@
 #include <utility>
 
 #include "glaze/glaze.hpp"
+#include "glz-util/internal/json_escape.hpp"
 
 namespace glz_util {
 
 namespace internal {
-
-inline auto append_json_escaped(std::string& out, std::string_view input) -> void {
-  for (char c : input) {
-    switch (c) {
-      case '\\':
-        out.append("\\\\");
-        break;
-      case '"':
-        out.append("\\\"");
-        break;
-      case '\n':
-        out.append("\\n");
-        break;
-      case '\r':
-        out.append("\\r");
-        break;
-      case '\t':
-        out.append("\\t");
-        break;
-      default:
-        out.push_back(c);
-        break;
-    }
-  }
-}
 
 inline auto make_parse_error_message(std::string_view field_name, std::string_view env, std::string_view detail)
   -> std::string {

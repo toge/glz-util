@@ -5,6 +5,7 @@
 #include <charconv>
 #include <expected>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -12,6 +13,7 @@
 #include <utility>
 
 #include "glaze/glaze.hpp"
+#include "glz-util/internal/json_escape.hpp"
 
 namespace glz_util {
 
@@ -41,30 +43,7 @@ struct ArgsError {
 
 namespace args_internal {
 
-inline auto append_json_escaped(std::string& out, std::string_view input) -> void {
-  for (auto const c : input) {
-    switch (c) {
-      case '\\':
-        out.append("\\\\");
-        break;
-      case '"':
-        out.append("\\\"");
-        break;
-      case '\n':
-        out.append("\\n");
-        break;
-      case '\r':
-        out.append("\\r");
-        break;
-      case '\t':
-        out.append("\\t");
-        break;
-      default:
-        out.push_back(c);
-        break;
-    }
-  }
-}
+using internal::append_json_escaped;
 
 inline auto make_parse_error_message(std::string_view field_name, std::string_view value, std::string_view detail)
   -> std::string {
@@ -88,12 +67,11 @@ inline auto make_parse_error(std::string_view field_name, std::string_view value
   };
 }
 
-inline auto make_from_chars_error_message(std::string_view field_name, std::string_view value, std::errc ec)
-  -> ArgsError {
+inline auto make_from_chars_error(std::string_view field_name, std::string_view value, std::errc ec) -> ArgsError {
   return make_parse_error(field_name, value, std::make_error_code(ec).message());
 }
 
-inline auto make_from_chars_trailing_characters_message(std::string_view field_name, std::string_view value)
+inline auto make_from_chars_trailing_characters_error(std::string_view field_name, std::string_view value)
   -> ArgsError {
   return make_parse_error(field_name, value, "input contains trailing characters");
 }
@@ -225,6 +203,8 @@ auto collect_values(int argc, char const* const* argv)
     }
 
     auto const next = std::string_view{argv[i + 1]};
+    // next が既知のオプション名と一致する場合、その値として消費しない。
+    // 例: --message ratio で ratio がフィールド名の場合、--message の値は未設定のままスキップされる。
     if (is_known_option<T>(next)) {
       continue;
     }
@@ -262,10 +242,10 @@ auto parse_plain_value(std::string_view field_name, std::string_view raw, Value&
     auto const last = first + raw.size();
     auto const [ptr, ec] = std::from_chars(first, last, value);
     if (ec != std::errc{}) {
-      return std::unexpected(make_from_chars_error_message(field_name, raw, ec));
+      return std::unexpected(make_from_chars_error(field_name, raw, ec));
     }
     if (ptr != last) {
-      return std::unexpected(make_from_chars_trailing_characters_message(field_name, raw));
+      return std::unexpected(make_from_chars_trailing_characters_error(field_name, raw));
     }
     return {};
   } else {
