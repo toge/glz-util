@@ -7,23 +7,23 @@
 
 #include "glaze/glaze.hpp"
 
-#if __has_include("zfp/array1.hpp")
+#if __has_include("zfp/array1.hpp") && !defined(_MSC_VER)
 #include "zfp/array1.hpp"
 #endif
 
-#if __has_include("zfp/array2.hpp")
+#if __has_include("zfp/array2.hpp") && !defined(_MSC_VER)
 #include "zfp/array2.hpp"
 #endif
 
-#if __has_include("zfp/array3.hpp")
+#if __has_include("zfp/array3.hpp") && !defined(_MSC_VER)
 #include "zfp/array3.hpp"
 #endif
 
-#if __has_include("zfp/array4.hpp")
+#if __has_include("zfp/array4.hpp") && !defined(_MSC_VER)
 #include "zfp/array4.hpp"
 #endif
 
-#if __has_include("zfp/array1.hpp")
+#if __has_include("zfp/array1.hpp") && !defined(_MSC_VER)
 template<std::floating_point Scalar,
          class Codec = zfp::codec::zfp1<Scalar>,
          class Index = zfp::index::implicit>
@@ -48,7 +48,7 @@ private:
 };
 #endif
 
-#if __has_include("zfp/array2.hpp")
+#if __has_include("zfp/array2.hpp") && !defined(_MSC_VER)
 template<std::floating_point Scalar,
          class Codec = zfp::codec::zfp2<Scalar>,
          class Index = zfp::index::implicit>
@@ -73,7 +73,7 @@ private:
 };
 #endif
 
-#if __has_include("zfp/array3.hpp")
+#if __has_include("zfp/array3.hpp") && !defined(_MSC_VER)
 template<std::floating_point Scalar,
          class Codec = zfp::codec::zfp3<Scalar>,
          class Index = zfp::index::implicit>
@@ -98,7 +98,7 @@ private:
 };
 #endif
 
-#if __has_include("zfp/array4.hpp")
+#if __has_include("zfp/array4.hpp") && !defined(_MSC_VER)
 template<std::floating_point Scalar,
          class Codec = zfp::codec::zfp4<Scalar>,
          class Index = zfp::index::implicit>
@@ -136,7 +136,7 @@ concept zfp_json_wrapper = requires(T& value) {
 template<zfp_json_wrapper Wrapper>
 struct zfp_json_traits;
 
-#if __has_include("zfp/array1.hpp")
+#if __has_include("zfp/array1.hpp") && !defined(_MSC_VER)
 template<std::floating_point Scalar, class Codec, class Index>
 struct zfp_json_traits<zfp_array1_wrapper<Scalar, Codec, Index>> {
   using wrapper_type = zfp_array1_wrapper<Scalar, Codec, Index>;
@@ -159,7 +159,7 @@ struct zfp_json_traits<zfp_array1_wrapper<Scalar, Codec, Index>> {
 };
 #endif
 
-#if __has_include("zfp/array2.hpp")
+#if __has_include("zfp/array2.hpp") && !defined(_MSC_VER)
 template<std::floating_point Scalar, class Codec, class Index>
 struct zfp_json_traits<zfp_array2_wrapper<Scalar, Codec, Index>> {
   using wrapper_type = zfp_array2_wrapper<Scalar, Codec, Index>;
@@ -214,7 +214,7 @@ struct zfp_json_traits<zfp_array2_wrapper<Scalar, Codec, Index>> {
 };
 #endif
 
-#if __has_include("zfp/array3.hpp")
+#if __has_include("zfp/array3.hpp") && !defined(_MSC_VER)
 template<std::floating_point Scalar, class Codec, class Index>
 struct zfp_json_traits<zfp_array3_wrapper<Scalar, Codec, Index>> {
   using wrapper_type = zfp_array3_wrapper<Scalar, Codec, Index>;
@@ -285,7 +285,7 @@ struct zfp_json_traits<zfp_array3_wrapper<Scalar, Codec, Index>> {
 };
 #endif
 
-#if __has_include("zfp/array4.hpp")
+#if __has_include("zfp/array4.hpp") && !defined(_MSC_VER)
 template<std::floating_point Scalar, class Codec, class Index>
 struct zfp_json_traits<zfp_array4_wrapper<Scalar, Codec, Index>> {
   using wrapper_type = zfp_array4_wrapper<Scalar, Codec, Index>;
@@ -376,7 +376,7 @@ struct zfp_json_traits<zfp_array4_wrapper<Scalar, Codec, Index>> {
 
 namespace glz {
 
-#if __has_include("zfp/array1.hpp")
+#if __has_include("zfp/array1.hpp") && !defined(_MSC_VER)
 template<std::floating_point Scalar, class Codec, class Index>
 struct meta<zfp_array1_wrapper<Scalar, Codec, Index>> {
   static constexpr auto custom_read = true;
@@ -384,7 +384,7 @@ struct meta<zfp_array1_wrapper<Scalar, Codec, Index>> {
 };
 #endif
 
-#if __has_include("zfp/array2.hpp")
+#if __has_include("zfp/array2.hpp") && !defined(_MSC_VER)
 template<std::floating_point Scalar, class Codec, class Index>
 struct meta<zfp_array2_wrapper<Scalar, Codec, Index>> {
   static constexpr auto custom_read = true;
@@ -392,7 +392,7 @@ struct meta<zfp_array2_wrapper<Scalar, Codec, Index>> {
 };
 #endif
 
-#if __has_include("zfp/array3.hpp")
+#if __has_include("zfp/array3.hpp") && !defined(_MSC_VER)
 template<std::floating_point Scalar, class Codec, class Index>
 struct meta<zfp_array3_wrapper<Scalar, Codec, Index>> {
   static constexpr auto custom_read = true;
@@ -400,7 +400,7 @@ struct meta<zfp_array3_wrapper<Scalar, Codec, Index>> {
 };
 #endif
 
-#if __has_include("zfp/array4.hpp")
+#if __has_include("zfp/array4.hpp") && !defined(_MSC_VER)
 template<std::floating_point Scalar, class Codec, class Index>
 struct meta<zfp_array4_wrapper<Scalar, Codec, Index>> {
   static constexpr auto custom_read = true;

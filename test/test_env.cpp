@@ -4,6 +4,13 @@
 
 #include "catch2/catch_all.hpp"
 
+#ifdef _MSC_VER
+#include <cstdlib>
+inline int setenv(const char* name, const char* value, int) {
+  return _putenv_s(name, value);
+}
+#endif
+
 struct test_struct {
 int         number1 = 0;
 float       number2 = 0.0f;
