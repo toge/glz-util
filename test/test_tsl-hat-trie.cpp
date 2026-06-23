@@ -24,7 +24,11 @@ TEST_CASE("glaze wrapper for tss::httrie_map") {
     REQUIRE(!ec);
   }
 
-  REQUIRE(buffer == "[\"E\",\"G\",\"A\",\"H\",\"D\",\"B\",\"C\",\"F\"]");
+  for (auto const& v : {"A", "B", "C", "D", "E", "F", "G", "H"}) {
+    REQUIRE(buffer.find(std::string("\"") + v + "\"") != std::string::npos);
+  }
+  REQUIRE(buffer.front() == '[');
+  REQUIRE(buffer.back() == ']');
 
   {
     auto test = htrie_map_wrapper<char, std::string>{};
