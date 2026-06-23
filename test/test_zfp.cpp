@@ -94,7 +94,7 @@ TEST_CASE("glaze wrapper for zfp::array3 reads and writes nested json") {
 
 TEST_CASE("glaze wrapper for zfp::array4 reads and writes nested json") {
   auto target = zfp_array4_wrapper<double>{16.0};
-  auto const input = R"([[[[1.0,2.0]],[[3.0,4.0]]],[[[5.0,6.0],[7.0,8.0]]]])";
+  auto const input = R"([[[[1.0,2.0]],[[3.0,4.0]]],[[[5.0,6.0]],[[7.0,8.0]]]])";
 
   auto const read_ec = glz::read_json(target, input);
   REQUIRE(!read_ec);
