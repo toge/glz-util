@@ -19,7 +19,7 @@ auto print_usage(std::string_view program_name) -> void {
   std::cerr << "Usage: " << program_name << " <schema.json> [--root NAME] [--output FILE]\n";
 }
 
-auto parse_arguments(int argc, char** argv) -> std::expected<cli_options, std::string> {
+auto parse_arguments(int argc, char** argv) -> std::expected<std::optional<cli_options>, std::string> {
   if (argc < 2) {
     return std::unexpected("schema file path is required");
   }
@@ -31,7 +31,7 @@ auto parse_arguments(int argc, char** argv) -> std::expected<cli_options, std::s
     auto const arg = std::string_view{argv[index]};
     if (arg == "--help" || arg == "-h") {
       print_usage(argv[0]);
-      std::exit(0);
+      return std::optional<cli_options>{};  // nullopt: ヘルプ表示済みのため正常終了
     }
 
     if (arg == "--root") {
@@ -62,7 +62,7 @@ auto parse_arguments(int argc, char** argv) -> std::expected<cli_options, std::s
     return std::unexpected("schema file path is required");
   }
 
-  return options;
+  return std::optional<cli_options>{std::move(options)};
 }
 
 }  // namespace
@@ -75,21 +75,28 @@ auto main(int argc, char** argv) -> int {
     return 1;
   }
 
-  glz_util::schema_codegen::codegen_options options{};
-  if (parsed->root_name.has_value()) {
-    options.root_name = *parsed->root_name;
+  // --help/-h が渡された場合は正常終了（既に usage を出力済み）
+  if (!*parsed) {
+    return 0;
   }
 
-  auto generated = glz_util::schema_codegen::generate_structs_from_json_schema_file(parsed->schema_path, options);
+  auto const& options_value = **parsed;
+  glz_util::schema_codegen::codegen_options options{};
+  if (options_value.root_name.has_value()) {
+    options.root_name = *options_value.root_name;
+  }
+
+  auto generated =
+    glz_util::schema_codegen::generate_structs_from_json_schema_file(options_value.schema_path, options);
   if (!generated) {
     std::cerr << generated.error() << '\n';
     return 1;
   }
 
-  if (parsed->output_path.has_value()) {
-    std::ofstream output{*parsed->output_path};
+  if (options_value.output_path.has_value()) {
+    std::ofstream output{*options_value.output_path};
     if (!output) {
-      std::cerr << "failed to open output file `" << parsed->output_path->string() << "`\n";
+      std::cerr << "failed to open output file `" << options_value.output_path->string() << "`\n";
       return 1;
     }
     output << *generated;

@@ -17,6 +17,19 @@ namespace glz_util {
 
 namespace internal {
 
+/// @brief Glaze の reflectable/meta 両方に対応したフィールドアクセスヘルパー
+template<typename T, std::size_t IDX>
+auto get_field(T& result) -> decltype(auto) {
+  if constexpr (glz::reflectable<T>) {
+    // メタ情報がない場合は std::tuple に変換してから取得する
+    return glz::get<IDX>(glz::to_tie(result));
+  } else {
+    // メタ情報がある場合はメタ情報を利用して取得する
+    auto& member = glz::get<IDX>(glz::reflect<T>::values);
+    return glz::get_member(result, member);
+  }
+}
+
 inline auto make_parse_error_message(std::string_view field_name, std::string_view env, std::string_view detail)
   -> std::string {
   std::string message;
@@ -47,17 +60,8 @@ auto from_env(T& result) -> std::expected<void, std::string> {
     if (auto const env = getenv(field_name.data()); env != nullptr) {
       auto const field_name_sv = std::string_view{field_name.data(), field_name.size()};
       auto const env_sv = std::string_view{env};
-      auto& value = [&]() -> decltype(auto) {
-        if constexpr (glz::reflectable<T>) {
-          // メタ情報がない場合はstd::tupleにしてから取得する
-          return glz::get<IDX>(glz::to_tie(result));
-        } else {
-          // メタ情報がある場合はメタ情報を利用して取得する
-          auto& member = glz::get<IDX>(glz::reflect<T>::values);
-          return glz::get_member(result, member);
-        }
-      }();
-      // std::from_charsはstd::stringへの変換に対応していないので、std::stringの場合は直接代入する
+      auto& value = get_field<T, IDX>(result);
+      // std::from_chars は std::string への変換に対応していないので、std::string の場合は直接代入する
       if constexpr (std::is_convertible_v<decltype(value), std::string>) {
         value = env;
       } else {
@@ -85,17 +89,8 @@ auto from_env(T& result) -> std::expected<void, std::string> {
     if (auto const env = getenv(field_name.data()); env != nullptr) {
       auto const field_name_sv = std::string_view{field_name.data(), field_name.size()};
       auto const env_sv = std::string_view{env};
-      auto& value = [&]() -> decltype(auto) {
-        if constexpr (glz::reflectable<T>) {
-          // メタ情報がない場合はstd::tupleにしてから取得する
-          return glz::get<IDX>(glz::to_tie(result));
-        } else {
-          // メタ情報がある場合はメタ情報を利用して取得する
-          auto& member = glz::get<IDX>(glz::reflect<T>::values);
-          return glz::get_member(result, member);
-        }
-      }();
-      // valueがstd::stringに変換できる型の場合は、envの値をそのまま代入する
+      auto& value = get_field<T, IDX>(result);
+      // value が std::string に変換できる型の場合は、env の値をそのまま代入する
       if constexpr (std::is_convertible_v<decltype(value), std::string>) {
         auto const env_size = env_sv.size();
         if (env_size >= 2 && env[0] == '"' && env[env_size - 1] == '"') {

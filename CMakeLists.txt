@@ -21,7 +21,7 @@ endif()
 ## add warning
 if (CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3")
+    add_compile_options($<$<CONFIG:Debug>:-g3>)
 endif()
 
 if (MSVC)

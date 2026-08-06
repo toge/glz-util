@@ -1,4 +1,3 @@
-#include <iostream>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -27,42 +26,16 @@ struct print_members_reflectable_struct {
   std::string message = "";
 };
 
-namespace {
-
-template <typename Fn>
-std::string capture_stdout(Fn&& fn) {
-  std::ostringstream output;
-  auto* const        original = std::cout.rdbuf(output.rdbuf());
-
-  try {
-    std::forward<Fn>(fn)();
-  } catch (...) {
-    std::cout.rdbuf(original);
-    throw;
-  }
-
-  std::cout.rdbuf(original);
-  return output.str();
-}
-
-}  // namespace
-
 TEST_CASE("print members uses glaze meta keys") {
   auto const value = print_members_meta_struct{.number = 42, .message = "hello"};
-
-  auto const output = capture_stdout([&]() {
-    glz_util::print_members(value);
-  });
-
-  REQUIRE(output == "0 NUMBER 42\n1 MESSAGE hello\n");
+  auto output = std::ostringstream{};
+  glz_util::print_members(value, output);
+  REQUIRE(output.str() == "0 NUMBER 42\n1 MESSAGE hello\n");
 }
 
 TEST_CASE("print members uses reflected member names") {
   auto const value = print_members_reflectable_struct{.number = 7, .message = "world"};
-
-  auto const output = capture_stdout([&]() {
-    glz_util::print_members(value);
-  });
-
-  REQUIRE(output == "0 number 7\n1 message world\n");
+  auto output = std::ostringstream{};
+  glz_util::print_members(value, output);
+  REQUIRE(output.str() == "0 number 7\n1 message world\n");
 }
